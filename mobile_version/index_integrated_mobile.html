@@ -122,6 +122,16 @@
             background-color: rgba(0, 123, 255, 0.1);
             pointer-events: none;
         }
+
+        @media (max-width: 768px) {
+            #controls {
+                position: static;
+                width: 90%;
+                margin: 20px auto;
+                right: auto;
+                top: auto;
+            }
+        }
     </style>
 </head>
 <body>
@@ -156,7 +166,6 @@
         }
     </script>
     <script type="module">
-        // All JavaScript logic remains the same as before.
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
@@ -181,12 +190,6 @@
         const boxSize = 10;
         const boxOutline = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(boxSize, boxSize, boxSize)), new THREE.LineBasicMaterial({ color: 0x333333, linewidth: 2 }));
         simulationGroup.add(boxOutline);
-
-        // Add a transparent box for raycasting
-        const boxGeometry = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
-        const boxMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }); // Invisible material
-        const interactiveBox = new THREE.Mesh(boxGeometry, boxMaterial);
-        simulationGroup.add(interactiveBox);
 
         const rotationHandle = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), new THREE.MeshBasicMaterial({ color: 0x007bff }));
         rotationHandle.position.set(boxSize / 2, boxSize / 2, boxSize / 2);
@@ -310,8 +313,8 @@
         }
 
         function get3DMousePosition(event) {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            mouse.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
             const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
             raycaster.setFromCamera(mouse, camera);
             const intersectPoint = new THREE.Vector3();
@@ -324,99 +327,78 @@
             return Math.abs(localPoint.x) <= half && Math.abs(localPoint.y) <= half && Math.abs(localPoint.z) <= half;
         }
 
-        renderer.domElement.addEventListener('mousedown', (event) => {
+        renderer.domElement.addEventListener('touchstart', (event) => {
             if (event.target.type === 'radio' || event.target.type === 'range' || event.target.type === 'color' || event.target.tagName === 'BUTTON') return;
 
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
+            if (event.touches.length === 1) { // Only handle single touch for now
+                mouse.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
 
-            const handleIntersects = raycaster.intersectObject(rotationHandle);
-            if (handleIntersects.length > 0) {
-                isDraggingHandle = true;
-                orbitControls.enabled = false;
-                previousMousePosition = { x: event.clientX, y: event.clientY };
-                return;
-            }
-
-            if (currentMode === 'delete') {
-                const sphereIntersects = raycaster.intersectObjects(spheres);
-                if (sphereIntersects.length > 0) {
-                    selectSphere(sphereIntersects[0].object, event.ctrlKey || event.metaKey);
-                } else {
-                    isSelecting = true;
-                    startPoint.set(event.clientX, event.clientY);
-                    selectionBoxElement.style.left = `${event.clientX}px`;
-                    selectionBoxElement.style.top = `${event.clientY}px`;
-                    selectionBoxElement.style.width = '0px';
-                    selectionBoxElement.style.height = '0px';
-                    selectionBoxElement.style.display = 'block';
+                const handleIntersects = raycaster.intersectObject(rotationHandle);
+                if (handleIntersects.length > 0) {
+                    isDraggingHandle = true;
+                    orbitControls.enabled = false;
+                    previousMousePosition = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+                    event.preventDefault(); // Prevent scrolling/zooming when dragging handle
+                } else if (currentMode === 'delete') {
+                    const sphereIntersects = raycaster.intersectObjects(spheres);
+                    if (sphereIntersects.length > 0) {
+                        selectSphere(sphereIntersects[0].object); // No additive selection for mobile
+                        event.preventDefault(); // Prevent scrolling/zooming when selecting sphere
+                    } else {
+                        isSelecting = true;
+                        startPoint.set(event.touches[0].clientX, event.touches[0].clientY);
+                        selectionBoxElement.style.left = `${event.touches[0].clientX}px`;
+                        selectionBoxElement.style.top = `${event.touches[0].clientY}px`;
+                        selectionBoxElement.style.width = '0px';
+                        selectionBoxElement.style.height = '0px';
+                        selectionBoxElement.style.display = 'block';
+                        event.preventDefault(); // Prevent scrolling/zooming when starting selection
+                    }
+                } else if (currentMode === 'create') {
+                    isCreatingBall = true;
+                    orbitControls.enabled = false;
+                    dragStartPos = get3DMousePosition(event);
+                    if (arrowHelper) scene.remove(arrowHelper);
+                    arrowHelper = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), dragStartPos, 0,'#007bff');
+                    scene.add(arrowHelper);
+                    event.preventDefault(); // Prevent scrolling/zooming when creating ball
                 }
-                return;
-            }
-
-            if (currentMode === 'create') {
-                isCreatingBall = true;
-                orbitControls.enabled = false;
-                dragStartPos = get3DMousePosition(event);
-                if (arrowHelper) scene.remove(arrowHelper);
-                arrowHelper = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), dragStartPos, 0, '#007bff');
-                scene.add(arrowHelper);
             }
         });
 
-        renderer.domElement.addEventListener('mousemove', (event) => {
+        renderer.domElement.addEventListener('touchmove', (event) => {
+            if (isDraggingHandle || isCreatingBall || isSelecting) {
+                event.preventDefault(); // Prevent scrolling/zooming only if a custom interaction is active
+            }
+
             if (isDraggingHandle) {
-                const deltaX = event.clientX - previousMousePosition.x;
-                const deltaY = event.clientY - previousMousePosition.y;
+                const deltaX = event.touches[0].clientX - previousMousePosition.x;
+                const deltaY = event.touches[0].clientY - previousMousePosition.y;
                 const rotationSpeed = 0.005;
                 const deltaRotationQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(deltaY * rotationSpeed, deltaX * rotationSpeed, 0, 'XYZ'));
                 simulationGroup.quaternion.multiplyQuaternions(deltaRotationQuaternion, simulationGroup.quaternion);
                 [...spheres, ...fadingSpheres, ...particles].forEach(obj => {
                     if(obj.userData.velocity) obj.userData.velocity.applyQuaternion(deltaRotationQuaternion);
                 });
-                previousMousePosition = { x: event.clientX, y: event.clientY };
+                previousMousePosition = { x: event.touches[0].clientX, y: event.touches[0].clientY };
             } else if (isCreatingBall) {
                 const dragCurrentPos = get3DMousePosition(event);
                 const direction = new THREE.Vector3().subVectors(dragCurrentPos, dragStartPos);
                 arrowHelper.setDirection(direction.clone().normalize());
                 arrowHelper.setLength(direction.length());
             } else if (isSelecting) {
-                const ex = event.clientX;
-                const ey = event.clientY;
+                const ex = event.touches[0].clientX;
+                const ey = event.touches[0].clientY;
                 selectionBoxElement.style.left = `${Math.min(ex, startPoint.x)}px`;
                 selectionBoxElement.style.top = `${Math.min(ey, startPoint.y)}px`;
                 selectionBoxElement.style.width = `${Math.abs(ex - startPoint.x)}px`;
                 selectionBoxElement.style.height = `${Math.abs(ey - startPoint.y)}px`;
             }
-
-            // Cursor change logic
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-
-            const intersects = raycaster.intersectObject(interactiveBox);
-
-            if (intersects.length > 0) {
-                const intersect = intersects[0];
-                // Calculate the normal in world coordinates
-                const worldNormal = intersect.face.normal.clone().transformDirection(intersect.object.matrixWorld);
-                // Calculate the vector from camera to intersect point
-                const cameraToPoint = new THREE.Vector3().subVectors(intersect.point, camera.position).normalize();
-
-                // If the normal points towards the camera, it's an "outer" face
-                // If the normal points away from the camera, it's an "inner" face (viewed from inside)
-                if (worldNormal.dot(cameraToPoint) < 0) {
-                    renderer.domElement.style.cursor = 'pointer'; // Or 'grab', 'crosshair', etc. for outer
-                } else {
-                    renderer.domElement.style.cursor = 'move'; // Or 'grabbing', 'cell', etc. for inner
-                }
-            } else {
-                renderer.domElement.style.cursor = 'default';
-            }
         });
 
-        renderer.domElement.addEventListener('mouseup', (event) => {
+        renderer.domElement.addEventListener('touchend', (event) => {
             if (isCreatingBall) {
                 const dragEndPos = get3DMousePosition(event);
                 let velocity = new THREE.Vector3().subVectors(dragEndPos, dragStartPos).multiplyScalar(0.05);
@@ -429,9 +411,9 @@
             }
             if (isSelecting) {
                 selectionBoxElement.style.display = 'none';
-                const endPoint = new THREE.Vector2(event.clientX, event.clientY);
+                const endPoint = new THREE.Vector2(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
                 const box = new THREE.Box2(new THREE.Vector2(Math.min(startPoint.x, endPoint.x), Math.min(startPoint.y, endPoint.y)), new THREE.Vector2(Math.max(startPoint.x, endPoint.x), Math.max(startPoint.y, endPoint.y)));
-                if (!event.ctrlKey && !event.metaKey) clearSelection();
+                clearSelection(); // 모바일에서는 다중 선택을 지원하지 않으므로 항상 초기화
                 spheres.forEach(sphere => {
                     const screenPos = new THREE.Vector3();
                     sphere.getWorldPosition(screenPos).project(camera);
@@ -442,10 +424,15 @@
                     }
                 });
             }
+
+            if (isDraggingHandle || isCreatingBall || isSelecting) {
+                event.preventDefault(); // Prevent default behavior only if a custom interaction was active
+            }
+
             isDraggingHandle = false;
             isCreatingBall = false;
             isSelecting = false;
-            if (currentMode === 'create' || orbitControls.target) orbitControls.enabled = true;
+            orbitControls.enabled = true; // Always re-enable orbit controls after touch ends
         });
 
         window.addEventListener('resize', () => {

@@ -1,163 +1,4 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Physics Simulation | Bouncing Balls</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #f0f2f5; /* 밝은 회색 배경 */
-            font-family: 'Roboto', sans-serif;
-        }
-
-        canvas { display: block; }
-
-        #controls {
-            position: absolute;
-            top: 20px;
-            right: 20px; /* 오른쪽으로 이동 */
-            width: 280px;
-            padding: 20px;
-            background: #ffffff;
-            border-radius: 12px; /* 둥근 모서리 */
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* 그림자 효과 */
-            color: #333;
-        }
-
-        .mode-selector {
-            display: flex;
-            background-color: #e9ecef;
-            border-radius: 8px;
-            padding: 4px;
-            margin-bottom: 20px;
-        }
-
-        .mode-selector label {
-            flex: 1;
-            padding: 8px 12px;
-            text-align: center;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: background-color 0.3s, color 0.3s;
-            font-weight: 500;
-            color: #495057;
-        }
-
-        .mode-selector input[type="radio"] {
-            display: none;
-        }
-
-        .mode-selector input[type="radio"]:checked + label {
-            background-color: #007bff;
-            color: white;
-        }
-
-        #create-controls h3, #delete-controls h3 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #dee2e6;
-            padding-bottom: 10px;
-            font-weight: 700;
-        }
-
-        #controls label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #495057;
-        }
-
-        #controls input[type="range"] {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 8px;
-            background: #dee2e6;
-            border-radius: 5px;
-            outline: none;
-            margin-bottom: 15px;
-        }
-
-        #controls input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            background: #007bff;
-            cursor: pointer;
-            border-radius: 50%;
-        }
-
-        #controls input[type="color"] {
-            width: 100%;
-            height: 40px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            padding: 5px;
-        }
-
-        #delete-button {
-            width: 100%;
-            padding: 12px;
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        #delete-button:hover {
-            background-color: #c82333;
-        }
-
-        #selection-box {
-            position: absolute;
-            border: 2px dashed #007bff;
-            background-color: rgba(0, 123, 255, 0.1);
-            pointer-events: none;
-        }
-    </style>
-</head>
-<body>
-    <div id="controls">
-        <div class="mode-selector">
-            <input type="radio" name="mode" value="create" id="create-mode" checked>
-            <label for="create-mode">Create</label>
-            <input type="radio" name="mode" value="delete" id="delete-mode">
-            <label for="delete-mode">Delete</label>
-        </div>
-        <div id="create-controls">
-            <h3>Create New Ball</h3>
-            <label for="radius">Radius: <span id="radius-value">0.5</span></label>
-            <input type="range" id="radius" min="0.2" max="1.5" step="0.1" value="0.5">
-            <label for="color">Color:</label>
-            <input type="color" id="color" value="#007bff">
-        </div>
-        <div id="delete-controls" style="display: none;">
-            <h3>Delete Mode</h3>
-             <p style="font-size: 14px; color: #6c757d; margin-top: -10px; margin-bottom: 15px;">Click or drag to select balls. Use Ctrl/Cmd for multiple selections.</p>
-            <button id="delete-button">Delete Selected</button>
-        </div>
-    </div>
-    <div id="selection-box"></div>
-
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-            }
-        }
-    </script>
-    <script type="module">
-        // All JavaScript logic remains the same as before.
-        import * as THREE from 'three';
+import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
         const scene = new THREE.Scene();
@@ -181,12 +22,6 @@
         const boxSize = 10;
         const boxOutline = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(boxSize, boxSize, boxSize)), new THREE.LineBasicMaterial({ color: 0x333333, linewidth: 2 }));
         simulationGroup.add(boxOutline);
-
-        // Add a transparent box for raycasting
-        const boxGeometry = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
-        const boxMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }); // Invisible material
-        const interactiveBox = new THREE.Mesh(boxGeometry, boxMaterial);
-        simulationGroup.add(interactiveBox);
 
         const rotationHandle = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), new THREE.MeshBasicMaterial({ color: 0x007bff }));
         rotationHandle.position.set(boxSize / 2, boxSize / 2, boxSize / 2);
@@ -389,31 +224,6 @@
                 selectionBoxElement.style.width = `${Math.abs(ex - startPoint.x)}px`;
                 selectionBoxElement.style.height = `${Math.abs(ey - startPoint.y)}px`;
             }
-
-            // Cursor change logic
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-
-            const intersects = raycaster.intersectObject(interactiveBox);
-
-            if (intersects.length > 0) {
-                const intersect = intersects[0];
-                // Calculate the normal in world coordinates
-                const worldNormal = intersect.face.normal.clone().transformDirection(intersect.object.matrixWorld);
-                // Calculate the vector from camera to intersect point
-                const cameraToPoint = new THREE.Vector3().subVectors(intersect.point, camera.position).normalize();
-
-                // If the normal points towards the camera, it's an "outer" face
-                // If the normal points away from the camera, it's an "inner" face (viewed from inside)
-                if (worldNormal.dot(cameraToPoint) < 0) {
-                    renderer.domElement.style.cursor = 'pointer'; // Or 'grab', 'crosshair', etc. for outer
-                } else {
-                    renderer.domElement.style.cursor = 'move'; // Or 'grabbing', 'cell', etc. for inner
-                }
-            } else {
-                renderer.domElement.style.cursor = 'default';
-            }
         });
 
         renderer.domElement.addEventListener('mouseup', (event) => {
@@ -501,6 +311,3 @@
         }
 
         animate();
-    </script>
-</body>
-</html>

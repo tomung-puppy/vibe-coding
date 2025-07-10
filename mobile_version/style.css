@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #f0f2f5; /* 밝은 회색 배경 */
+            font-family: 'Roboto', sans-serif;
+        }
+
+        canvas { display: block; }
+
+        #controls {
+            position: absolute;
+            top: 20px;
+            right: 20px; /* 오른쪽으로 이동 */
+            width: 280px;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 12px; /* 둥근 모서리 */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* 그림자 효과 */
+            color: #333;
+        }
+
+        .mode-selector {
+            display: flex;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+
+        .mode-selector label {
+            flex: 1;
+            padding: 8px 12px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.3s, color 0.3s;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .mode-selector input[type="radio"] {
+            display: none;
+        }
+
+        .mode-selector input[type="radio"]:checked + label {
+            background-color: #007bff;
+            color: white;
+        }
+
+        #create-controls h3, #delete-controls h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 10px;
+            font-weight: 700;
+        }
+
+        #controls label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        #controls input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #dee2e6;
+            border-radius: 5px;
+            outline: none;
+            margin-bottom: 15px;
+        }
+
+        #controls input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #007bff;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        #controls input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 5px;
+        }
+
+        #delete-button {
+            width: 100%;
+            padding: 12px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #delete-button:hover {
+            background-color: #c82333;
+        }
+
+        #selection-box {
+            position: absolute;
+            border: 2px dashed #007bff;
+            background-color: rgba(0, 123, 255, 0.1);
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            #controls {
+                position: static;
+                width: 90%;
+                margin: 20px auto;
+                right: auto;
+                top: auto;
+            }
+        }
